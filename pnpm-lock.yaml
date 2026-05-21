@@ -215,7 +215,11 @@ importers:
 
   packages/agent: {}
 
-  packages/server: {}
+  packages/server:
+    dependencies:
+      ws:
+        specifier: ^8.20.1
+        version: 8.20.1
 
   packages/shared:
     devDependencies:
@@ -264,6 +268,18 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  ws@8.20.1:
+    resolution: {integrity: sha512-It4dO0K5v//JtTXuPkfEOaI3uUN87iYPnqo/ZzqCoG3g8uhA66QUMs/SrM0YK7/NAu+r4LMh/9dq2A7k+rHs+w==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
 snapshots:
 
   '@turbo/darwin-64@2.9.14':
@@ -294,3 +310,5 @@ snapshots:
       '@turbo/windows-arm64': 2.9.14
 
   typescript@6.0.3: {}
+
+  ws@8.20.1: {}
