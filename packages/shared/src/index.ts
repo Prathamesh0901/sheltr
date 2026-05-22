@@ -6,7 +6,7 @@ export type AgentMessage =
 
 // Messages from Browser to Server
 export type BrowserMessage = 
-    | { type: 'output'; data: string; }
+    | { type: 'input'; data: string; }
     | { type: 'resize'; rows: number; cols: number; }
 
 // Messages from Server to Browser
