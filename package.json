@@ -18,6 +18,7 @@
   },
   "type": "module",
   "devDependencies": {
+    "node-gyp": "^12.3.0",
     "turbo": "^2.9.14"
   }
 }
