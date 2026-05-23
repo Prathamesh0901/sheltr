@@ -3,4 +3,6 @@ packages:
   - 'apps/*'
 allowBuilds:
   esbuild: set this to true or false
-  node-pty: set this to true or false
+  node-pty: true
+  sharp: true
+  unrs-resolver: true
