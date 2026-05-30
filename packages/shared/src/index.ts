@@ -14,6 +14,8 @@ export type ServerToBrowserMessage =
     | { type: 'output'; data: string; }
     | { type: 'resize'; rows: number; cols: number; }
     | { type: 'buffer'; data: string; }
+    | { type: 'role', role: Role }
+    | { type: 'error', message: string }
     | { type: 'connected'; }
     | { type: 'disconnected'; }
     
@@ -22,3 +24,6 @@ export type ServerToAgentMessage =
     | { type: 'urls'; data: { controllerUrl: string, viewerUrl: string }; }
     | { type: 'input'; data: string; }
     | { type: 'resize'; rows: number; cols: number; }
+
+// User Role
+export type Role = 'controller' | 'viewer'
