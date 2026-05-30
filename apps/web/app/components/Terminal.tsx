@@ -1,11 +1,11 @@
 'use client'
 
-import { AgentMessage, BrowserMessage, ServerMessage } from "@sheltr/shared";
+import { AgentMessage, BrowserMessage, ServerToBrowserMessage } from "@sheltr/shared";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { useEffect, useRef } from "react";
 
-export default function TerminalComponent() {
+export default function TerminalComponent({ sessionId }: { sessionId: string }) {
     const terminalRef = useRef<HTMLDivElement>(null)
     const wsRef = useRef<WebSocket | null>(null)
     const termRef = useRef<Terminal | null>(null)
@@ -29,17 +29,22 @@ export default function TerminalComponent() {
         term.open(terminalRef.current!)
         fitAddon.fit()
 
-        const ws = new WebSocket('ws://localhost:3001?role=browser')
+        const ws = new WebSocket(`ws://localhost:3001?role=browser&sessionId=${sessionId}`);
+
         wsRef.current = ws
         ws.binaryType = 'arraybuffer'
 
         ws.onmessage = (event) => {
+            console.log(event.data);
             const raw = event.data instanceof ArrayBuffer
                 ? new TextDecoder().decode(event.data)
                 : event.data
-            const message = JSON.parse(raw) as ServerMessage
+            const message = JSON.parse(raw) as ServerToBrowserMessage
             if (message.type === 'output') {
                 term.write(message.data)
+            }
+            else if(message.type === 'buffer') {
+                term.write(message.data);
             }
         }
 

@@ -8,10 +8,17 @@ export type AgentMessage =
 export type BrowserMessage = 
     | { type: 'input'; data: string; }
     | { type: 'resize'; rows: number; cols: number; }
-
+    
 // Messages from Server to Browser
-export type ServerMessage = 
+export type ServerToBrowserMessage = 
     | { type: 'output'; data: string; }
     | { type: 'resize'; rows: number; cols: number; }
-    | { type: 'connected'}
-    | { type: 'disconnected'}
+    | { type: 'buffer'; data: string; }
+    | { type: 'connected'; }
+    | { type: 'disconnected'; }
+    
+// Messages from Server to Agent
+export type ServerToAgentMessage = 
+    | { type: 'urls'; data: { controllerUrl: string, viewerUrl: string }; }
+    | { type: 'input'; data: string; }
+    | { type: 'resize'; rows: number; cols: number; }

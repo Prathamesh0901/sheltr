@@ -1,0 +1,75 @@
+import { AgentMessage } from "@sheltr/shared";
+import { randomUUID, UUID } from "node:crypto";
+import { RawData, WebSocket } from 'ws';
+
+class Session {
+    id: UUID; 
+    agentSocket: WebSocket | null = null;
+    browserSockets: WebSocket[] = [];
+    buffer: string = "";
+
+    constructor (id: UUID, agentWs: WebSocket) {
+        this.id = id;
+        this.agentSocket = agentWs;
+    }      
+};
+
+class SessionManager {
+    sessions: Session[] = [];
+    static instance: SessionManager | null = null;
+
+    private constructor () {}
+
+    static getSessionManager() {
+        if(this.instance) return this.instance;
+        this.instance = new SessionManager();
+        return this.instance;
+    }
+
+    createSession(agentWs: WebSocket): UUID {
+        const sessionExists = this.sessions.find(session => session.agentSocket === agentWs);
+        if (sessionExists && sessionExists.id) return sessionExists.id;
+
+        const newSessionId = randomUUID();
+        this.sessions.push(new Session(newSessionId, agentWs));
+
+        return newSessionId;
+    }
+
+    getSession(id: UUID): Session | undefined {
+        const session = this.sessions.find(session => session.id === id);
+        return session;
+    }
+
+    addBrowser(id: UUID, browserSocket: WebSocket): boolean {
+        const session = this.getSession(id);
+        if (session) {
+            session.browserSockets.push(browserSocket);
+            return true;
+        }
+        return false;
+    }
+
+    removeBrowser(id: UUID, browserSocket: WebSocket) {
+        const session = this.getSession(id);
+        if (session) {
+            const browserSockets = session.browserSockets.filter(bSocket => bSocket !== browserSocket);
+            session.browserSockets = browserSockets;
+        }
+        return;
+    }
+
+    appendScrollback(id: UUID, data: AgentMessage) {
+        const session = this.getSession(id);
+        if (session && data.type === 'output') {
+            session.buffer += data.data;
+        }
+    }
+    
+    destroySession(id: UUID) {
+        const filteredSessions = this.sessions.filter(session => session.id !== id);
+        this.sessions = filteredSessions;
+    }
+};
+
+export default SessionManager.getSessionManager();

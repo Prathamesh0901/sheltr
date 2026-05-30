@@ -1,6 +1,6 @@
 import * as pty from 'node-pty';
 import WebSocket from 'ws';
-import { AgentMessage, BrowserMessage } from '@sheltr/shared';
+import { AgentMessage, BrowserMessage, ServerToAgentMessage } from '@sheltr/shared';
 
 const SERVER_URL = process.env.SHELTR_SERVER_URL ?? 'ws://localhost:3001';
 const shell = process.env.SHELL ?? 'bash';
@@ -30,9 +30,12 @@ ws.on('open', () => {
     })
 
     ws.on('message', (raw) => {
-        const message = JSON.parse(raw.toString()) as BrowserMessage;
+        const message = JSON.parse(raw.toString()) as ServerToAgentMessage;
 
-        if(message.type === 'input') {
+        if(message.type === 'urls') {
+            console.log(message.data);
+        }
+        else if(message.type === 'input') {
             ptyProcess.write(message.data);
         }
         else if(message.type === 'resize') {
