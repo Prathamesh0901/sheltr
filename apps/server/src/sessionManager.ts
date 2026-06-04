@@ -7,6 +7,8 @@ class Session {
     agentSocket: WebSocket | null = null;
     browserSockets: Map<WebSocket, Role> = new Map<WebSocket, Role>();
     buffer: string = "";
+    recording: { t: number, data: string }[] = [];
+    startTime: number = Date.now();
 
     constructor (id: UUID, agentWs: WebSocket) {
         this.id = id;
@@ -63,6 +65,13 @@ class SessionManager {
         if (session && data.type === 'output') {
             session.buffer += data.data;
         }
+    }
+
+    appendRecording(id: UUID, data: string) {
+        const session = this.getSession(id);
+        if(!session) return;
+
+        session.recording.push({ t: Date.now()-session.startTime, data});
     }
     
     destroySession(id: UUID) {

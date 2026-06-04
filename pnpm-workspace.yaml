@@ -2,7 +2,9 @@ packages:
   - 'packages/*'
   - 'apps/*'
 allowBuilds:
+  '@prisma/engines': true
   esbuild: set this to true or false
   node-pty: true
+  prisma: true
   sharp: true
   unrs-resolver: true
