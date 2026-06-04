@@ -1,11 +1,11 @@
 'use client'
 
-import { AgentMessage, BrowserMessage, ServerToBrowserMessage } from "@sheltr/shared";
+import { AgentMessage, BrowserMessage, Role, ServerToBrowserMessage } from "@sheltr/shared";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { useEffect, useRef } from "react";
 
-export default function TerminalComponent({ sessionId }: { sessionId: string }) {
+export default function TerminalComponent({ sessionId, role }: { sessionId: string, role: Role }) {
     const terminalRef = useRef<HTMLDivElement>(null)
     const wsRef = useRef<WebSocket | null>(null)
     const termRef = useRef<Terminal | null>(null)
@@ -29,13 +29,16 @@ export default function TerminalComponent({ sessionId }: { sessionId: string }) 
         term.open(terminalRef.current!)
         fitAddon.fit()
 
-        const ws = new WebSocket(`ws://localhost:3001?role=browser&sessionId=${sessionId}`);
+        if(role === 'viewer') {
+            term.options.disableStdin = true;
+        }
+
+        const ws = new WebSocket(`ws://localhost:3001?role=${role}&sessionId=${sessionId}`);
 
         wsRef.current = ws
         ws.binaryType = 'arraybuffer'
 
         ws.onmessage = (event) => {
-            console.log(event.data);
             const raw = event.data instanceof ArrayBuffer
                 ? new TextDecoder().decode(event.data)
                 : event.data

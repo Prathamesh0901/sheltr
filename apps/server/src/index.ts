@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from "ws";
 import sessionManager from './sessionManager.js';
-import { AgentMessage, BrowserMessage, ServerToAgentMessage, ServerToBrowserMessage } from "@sheltr/shared";
+import { AgentMessage, BrowserMessage, Role, ServerToAgentMessage, ServerToBrowserMessage } from "@sheltr/shared";
 import { UUID } from "node:crypto";
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
@@ -30,11 +30,11 @@ wss.on('connection', (ws, req) => {
             if (agentMessage.type === 'output') {
                 const browserMessage: ServerToBrowserMessage = { type: 'output', data: agentMessage.data }
                 const serialised = JSON.stringify(browserMessage)
-                session?.browserSockets.forEach(browser => {
-                    if (browser.readyState === WebSocket.OPEN) {
-                        browser.send(serialised)
+                session?.browserSockets.forEach((browserRole, browserWs) => {
+                    if (browserWs.readyState === WebSocket.OPEN) {
+                        browserWs.send(serialised)
                     }
-                })
+                });
             }
             sessionManager.appendScrollback(sessionId, agentMessage);
         });
@@ -42,16 +42,19 @@ wss.on('connection', (ws, req) => {
         ws.on('close', () => {
             console.log('Agent disconnected');
             const session = sessionManager.getSession(sessionId);
-            session?.browserSockets.forEach(browser => browser.close());
+            session?.browserSockets.forEach(((browserRole, browserWs) => browserWs.close()));
             sessionManager.destroySession(sessionId);
         });
     }
 
-    if (role === 'browser') {
+    if (role === 'controller' || role === 'viewer') {
         const sessionId = new URL(req.url!, 'http://localhost').searchParams.get('sessionId') as UUID;
         if (!sessionId) return;
 
-        sessionManager.addBrowser(sessionId, ws);
+        sessionManager.addBrowser(sessionId, role, ws);
+
+        const message: ServerToBrowserMessage = { type: 'role', role };
+        ws.send(JSON.stringify(message));
 
         console.log('Browser added to session:', sessionId);
 
@@ -66,6 +69,10 @@ wss.on('connection', (ws, req) => {
         ws.on('message', (data) => {
             const session = sessionManager.getSession(sessionId);
             if (!session) return;
+
+            const role = session.browserSockets.get(ws);
+
+            if(!role || role === 'viewer') return;
 
             const browserMessage = JSON.parse(data.toString()) as BrowserMessage;
 

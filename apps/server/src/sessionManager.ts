@@ -1,11 +1,11 @@
-import { AgentMessage } from "@sheltr/shared";
+import { AgentMessage, Role } from "@sheltr/shared";
 import { randomUUID, UUID } from "node:crypto";
 import { RawData, WebSocket } from 'ws';
 
 class Session {
     id: UUID; 
     agentSocket: WebSocket | null = null;
-    browserSockets: WebSocket[] = [];
+    browserSockets: Map<WebSocket, Role> = new Map<WebSocket, Role>();
     buffer: string = "";
 
     constructor (id: UUID, agentWs: WebSocket) {
@@ -41,10 +41,10 @@ class SessionManager {
         return session;
     }
 
-    addBrowser(id: UUID, browserSocket: WebSocket): boolean {
+    addBrowser(id: UUID, role: Role, browserSocket: WebSocket): boolean {
         const session = this.getSession(id);
         if (session) {
-            session.browserSockets.push(browserSocket);
+            session.browserSockets.set(browserSocket, role);
             return true;
         }
         return false;
@@ -53,8 +53,7 @@ class SessionManager {
     removeBrowser(id: UUID, browserSocket: WebSocket) {
         const session = this.getSession(id);
         if (session) {
-            const browserSockets = session.browserSockets.filter(bSocket => bSocket !== browserSocket);
-            session.browserSockets = browserSockets;
+            session.browserSockets.delete(browserSocket);
         }
         return;
     }
