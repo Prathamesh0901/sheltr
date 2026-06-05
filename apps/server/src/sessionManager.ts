@@ -13,6 +13,7 @@ class Session {
     constructor (id: UUID, agentWs: WebSocket) {
         this.id = id;
         this.agentSocket = agentWs;
+        this.startTime = Date.now();
     }      
 };
 

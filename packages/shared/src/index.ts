@@ -17,7 +17,7 @@ export type ServerToBrowserMessage =
     | { type: 'role', role: Role }
     | { type: 'error', message: string }
     | { type: 'connected'; }
-    | { type: 'disconnected'; }
+    | { type: 'disconnected'; replayUrl: string}
     
 // Messages from Server to Agent
 export type ServerToAgentMessage = 

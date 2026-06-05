@@ -1,13 +1,19 @@
+import 'dotenv/config'
+import express from 'express'
+import http from 'http'
 import { WebSocketServer, WebSocket } from "ws";
 import sessionManager from './sessionManager.js';
 import { AgentMessage, BrowserMessage, Role, ServerToAgentMessage, ServerToBrowserMessage } from "@sheltr/shared";
 import { UUID } from "node:crypto";
+import { prisma } from '@sheltr/db';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 
-const wss = new WebSocketServer({ port: PORT });
+const app = express();
 
-console.log(`Server running on port: ${PORT}`);
+const server = http.createServer(app);
+
+const wss = new WebSocketServer({ server });
 
 wss.on('connection', (ws, req) => {
     const role = new URL(req.url!, 'http://localhost').searchParams.get('role');
@@ -37,12 +43,32 @@ wss.on('connection', (ws, req) => {
                 });
             }
             sessionManager.appendScrollback(sessionId, agentMessage);
+            if (agentMessage.type === 'output') {
+                sessionManager.appendRecording(sessionId, agentMessage.data);
+            }
         });
 
-        ws.on('close', () => {
+        ws.on('close', async () => {
             console.log('Agent disconnected');
             const session = sessionManager.getSession(sessionId);
-            session?.browserSockets.forEach(((browserRole, browserWs) => browserWs.close()));
+            if(!session) return;
+
+            const duration = Date.now() - session.startTime;
+
+            const res = await prisma.recording.create({
+                data: {
+                    sessionId,
+                    duration,
+                    events: session.recording,
+                }
+            });
+
+            session.browserSockets.forEach(((browserRole, browserWs) => {
+                const replayUrl = `http://localhost:3000/r/${res.id}`;
+                browserWs.send(JSON.stringify({ type: 'disconnected', replayUrl }));
+                browserWs.close()
+            }));
+
             sessionManager.destroySession(sessionId);
         });
     }
@@ -92,4 +118,42 @@ wss.on('connection', (ws, req) => {
             sessionManager.removeBrowser(sessionId, ws);
         })
     }
+})
+
+app.get('/replay/:replayId', async (req, res) => {
+    try {
+        const replayId = req.params.replayId;
+        if(!replayId) {
+            return res.status(400).json({
+                message: 'Session id is required'
+            })
+        }
+
+        const replay = await prisma.recording.findUnique({
+            where: {
+                id: replayId
+            }
+        })
+
+        if(!replay) {
+            return res.status(400).json({
+                message: 'Session not found'
+            })
+        }
+
+        res.status(200).json({
+            message: 'Session found',
+            replay
+        })
+
+    } catch (e) {
+        console.log('Error fetching replay:', e);
+        res.status(400).json({
+            message: 'Error fetching the replay'
+        });
+    }
+})
+
+server.listen(PORT, () => {
+    console.log(`App is listening on port ${PORT}`);
 })

@@ -3,9 +3,12 @@
 import { AgentMessage, BrowserMessage, Role, ServerToBrowserMessage } from "@sheltr/shared";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 export default function TerminalComponent({ sessionId, role }: { sessionId: string, role: Role }) {
+    const router = useRouter();
+
     const terminalRef = useRef<HTMLDivElement>(null)
     const wsRef = useRef<WebSocket | null>(null)
     const termRef = useRef<Terminal | null>(null)
@@ -48,6 +51,10 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
             }
             else if(message.type === 'buffer') {
                 term.write(message.data);
+            }
+            else if(message.type === 'disconnected') {
+                alert('Session has ended')
+                router.push(message.replayUrl);
             }
         }
 

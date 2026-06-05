@@ -9,10 +9,14 @@
     "build": "tsc"
   },
   "dependencies": {
-    "ws": "^8.20.1",
-    "@sheltr/shared": "workspace:*"
+    "@sheltr/db": "workspace:*",
+    "@sheltr/shared": "workspace:*",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "ws": "^8.20.1"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^25.9.1",
     "@types/ws": "^8.18.1",
     "tsx": "^4.22.3",
