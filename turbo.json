@@ -1,6 +1,9 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": ["DATABASE_URL"], 
+  "build": {
+
+  },
   "tasks": {
     "dev": {
       "persistent": true,
