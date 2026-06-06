@@ -3,3 +3,4 @@ dist
 .env
 .turbo
 .next
+sheltr_-agent-*.tgz

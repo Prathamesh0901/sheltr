@@ -1,10 +1,10 @@
 {
-  "name": "@sheltr/agent",
-  "version": "1.0.0",
+  "name": "@sheltr_/agent",
+  "version": "1.0.1",
   "description": "",
   "main": "dist/index.js",
   "bin": {
-    "sheltr-agent": "./dist/index.js"
+    "sheltr": "./dist/index.js"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
