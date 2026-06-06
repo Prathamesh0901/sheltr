@@ -3,7 +3,7 @@ packages:
   - 'apps/*'
 allowBuilds:
   '@prisma/engines': true
-  esbuild: set this to true or false
+  esbuild: true
   node-pty: true
   prisma: true
   sharp: true

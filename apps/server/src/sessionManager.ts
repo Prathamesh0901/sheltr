@@ -9,7 +9,7 @@ class Session {
     buffer: string = "";
     recording: { t: number, data: string }[] = [];
     startTime: number = Date.now();
-
+    
     constructor (id: UUID, agentWs: WebSocket) {
         this.id = id;
         this.agentSocket = agentWs;
@@ -20,7 +20,8 @@ class Session {
 class SessionManager {
     sessions: Session[] = [];
     static instance: SessionManager | null = null;
-
+    sessionTimer: Map<UUID, NodeJS.Timeout> = new Map<UUID, NodeJS.Timeout>
+    
     private constructor () {}
 
     static getSessionManager() {
@@ -36,6 +37,13 @@ class SessionManager {
         const newSessionId = randomUUID();
         this.sessions.push(new Session(newSessionId, agentWs));
 
+        const timeout = setTimeout(() => {
+            this.destroySession(newSessionId);
+            this.sessionTimer.delete(newSessionId);
+        }, 600000);
+
+        this.sessionTimer.set(newSessionId, timeout);
+
         return newSessionId;
     }
 
@@ -47,6 +55,13 @@ class SessionManager {
     addBrowser(id: UUID, role: Role, browserSocket: WebSocket): boolean {
         const session = this.getSession(id);
         if (session) {
+            if(session.browserSockets.size === 0) {
+                const timer = this.sessionTimer.get(session.id);
+                if(timer) {
+                    clearTimeout(timer);
+                    this.sessionTimer.delete(session.id);
+                }
+            }
             session.browserSockets.set(browserSocket, role);
             return true;
         }
@@ -76,6 +91,11 @@ class SessionManager {
     }
     
     destroySession(id: UUID) {
+        const timer = this.sessionTimer.get(id)
+        if(timer) {
+            clearTimeout(timer)
+            this.sessionTimer.delete(id)
+        }
         const filteredSessions = this.sessions.filter(session => session.id !== id);
         this.sessions = filteredSessions;
     }

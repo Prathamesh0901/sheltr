@@ -12,7 +12,9 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
     const terminalRef = useRef<HTMLDivElement>(null)
     const wsRef = useRef<WebSocket | null>(null)
     const termRef = useRef<Terminal | null>(null)
-
+    const disconnectedRef = useRef<boolean>(false)
+    const errorRef = useRef<boolean>(false)
+    
     useEffect(() => {
         if (wsRef.current || termRef.current) return
 
@@ -53,9 +55,19 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
                 term.write(message.data);
             }
             else if(message.type === 'disconnected') {
-                alert('Session has ended')
+                disconnectedRef.current = true;
                 router.push(message.replayUrl);
             }
+        }
+
+        ws.onclose = () => {
+            if(disconnectedRef.current || errorRef.current) return
+            term.write('\r\nConnection lost. Session may have ended.\r\n')
+        }
+
+        ws.onerror = () => {
+            errorRef.current = true
+            term.write('\r\nConnection error. Please try again.\r\n')
         }
 
         term.onData((data) => {

@@ -33,8 +33,6 @@ export default async function Home({ params }: Props) {
     
     const replay = await getReplay(replayId);
 
-    console.log(replay);
-
     if(!replay) {
         return (
             <div>

@@ -3,19 +3,23 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
+  "bin": {
+    "sheltr-agent": "./dist/index.js"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc"
+    "build": "tsup src/index.ts --format esm --outDir dist"
   },
   "type": "module",
   "dependencies": {
     "node-pty": "^1.1.0",
-    "ws": "^8.20.1",
-    "@sheltr/shared": "workspace:*"
+    "ws": "^8.20.1"
   },
   "devDependencies": {
+    "@sheltr/shared": "workspace:*",
     "@types/node": "^25.9.1",
     "@types/ws": "^8.18.1",
+    "tsup": "^8.5.1",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   }

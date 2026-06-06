@@ -1,8 +1,9 @@
+#!/usr/bin/env node
+
 import * as pty from 'node-pty';
 import WebSocket from 'ws';
-import { AgentMessage, BrowserMessage, ServerToAgentMessage } from '@sheltr/shared';
+import { AgentMessage, ServerToAgentMessage } from '@sheltr/shared';
 
-const SERVER_URL = process.env.SHELTR_SERVER_URL ?? 'ws://localhost:3001';
 const shell = process.env.SHELL ?? 'bash';
 
 // Spawn the local shell
@@ -15,48 +16,76 @@ const ptyProcess = pty.spawn(shell, [], {
 });
 
 console.log(`Spawned ${shell} shell`);
-console.log(`Connecting to server at ${SERVER_URL}`);
 
-// Connect to relay server
-const ws = new WebSocket(`${SERVER_URL}?role=agent`);
+const SERVER_URL = process.env.SHELTR_SERVER_URL ?? 'ws://localhost:3001';
 
-ws.on('open', () => {
-    console.log('Connected to server');
+let currentWs: WebSocket | null = null;
 
-    // PTY-output to Server
-    ptyProcess.onData((data) => {
-        const message: AgentMessage = { type: 'output', data};
-        ws.send(JSON.stringify(message));
+export const connectServer = (attempts: number) => {
+    if (attempts >= 5) {
+        console.log('Could not connect after 5 attempts. Exiting.');
+        process.exit(1);
+    }
+
+    console.log(`Connecting to server at ${SERVER_URL}`);
+
+    // Connect to relay server
+    const ws = new WebSocket(`${SERVER_URL}?role=agent`);
+
+    ws.on('open', () => {
+        currentWs = ws;
+        console.log('Connected to server');
+
+        ws.on('message', (raw) => {
+            const message = JSON.parse(raw.toString()) as ServerToAgentMessage;
+
+            if (message.type === 'urls') {
+                console.log(message.data);
+            }
+            else if (message.type === 'input') {
+                ptyProcess.write(message.data);
+            }
+            else if (message.type === 'resize') {
+                ptyProcess.resize(message.cols, message.rows);
+            }
+        })
     })
-
-    ws.on('message', (raw) => {
-        const message = JSON.parse(raw.toString()) as ServerToAgentMessage;
-
-        if(message.type === 'urls') {
-            console.log(message.data);
-        }
-        else if(message.type === 'input') {
-            ptyProcess.write(message.data);
-        }
-        else if(message.type === 'resize') {
-            ptyProcess.resize(message.cols, message.rows);
-        }
+    
+    ws.on('close', () => {
+        const delay = Math.pow(2, attempts)*1000;
+        console.log(`Reconnecting in ${delay/1000}s...`);
+        setTimeout(() => connectServer(attempts+1),delay);
     })
-})
+    
+    ws.on('error', (err) => {
+        console.log('Websocker err:', err.message);
+    })
+    
+    return ws;
+}
 
-ws.on('close', () => {
-    console.log('Disconnected from server')
-    ptyProcess.kill();
-    process.exit(0);
-})
+connectServer(0);
 
-ws.on('error', (err) => {
-    console.log('Websocker err:', err.message);
-    process.exit(1);
+// PTY-output to Server
+ptyProcess.onData((data) => {
+    const message: AgentMessage = { type: 'output', data };
+    currentWs?.send(JSON.stringify(message));
 })
 
 ptyProcess.onExit(() => {
     const message: AgentMessage = { type: 'exit' };
-    ws.send(JSON.stringify(message));
-    ws.close();
+    if(currentWs?.readyState === WebSocket.OPEN) {
+        currentWs.send(JSON.stringify(message))
+    }
+    currentWs?.close();
 })
+
+process.on('SIGINT', () => {
+    const message: AgentMessage = { type: 'exit' }
+    if(currentWs?.readyState === WebSocket.OPEN) {
+        currentWs.send(JSON.stringify(message))
+    }
+    currentWs?.close()
+    ptyProcess.kill()
+    process.exit(0)
+});
