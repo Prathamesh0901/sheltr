@@ -27,8 +27,6 @@ export const connectServer = (attempts: number) => {
         process.exit(1);
     }
 
-    console.log(`Connecting to server at ${SERVER_URL}`);
-
     // Connect to relay server
     const ws = new WebSocket(`${SERVER_URL}?role=agent`);
 
@@ -40,7 +38,9 @@ export const connectServer = (attempts: number) => {
             const message = JSON.parse(raw.toString()) as ServerToAgentMessage;
 
             if (message.type === 'urls') {
-                console.log(message.data);
+                console.log('\n✓ Session ready\n')
+                console.log(`  Controller → ${message.data.controllerUrl}`)
+                console.log(`  Viewer     → ${message.data.viewerUrl}\n`)
             }
             else if (message.type === 'input') {
                 ptyProcess.write(message.data);
