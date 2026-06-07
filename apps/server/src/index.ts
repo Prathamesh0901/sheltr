@@ -21,8 +21,6 @@ wss.on('connection', (ws, req) => {
     if (role === 'agent') {
         const sessionId = sessionManager.createSession(ws);
 
-        console.log('New session created');
-
         const controllerUrl = `http://localhost:3000/s/${sessionId}?role=controller`;
         const viewerUrl = `http://localhost:3000/s/${sessionId}?role=viewer`;
 
@@ -49,7 +47,6 @@ wss.on('connection', (ws, req) => {
         });
 
         ws.on('close', async () => {
-            console.log('Agent disconnected');
             const session = sessionManager.getSession(sessionId);
             if(!session) return;
 
@@ -82,15 +79,11 @@ wss.on('connection', (ws, req) => {
         const message: ServerToBrowserMessage = { type: 'role', role };
         ws.send(JSON.stringify(message));
 
-        console.log('Browser added to session:', sessionId);
-
         const session = sessionManager.getSession(sessionId);
         if (session?.buffer) {
             const message: ServerToBrowserMessage = { type: 'buffer', data: session.buffer };
             ws.send(JSON.stringify(message));
         }
-
-        console.log('Browser connected to session', sessionId);
 
         ws.on('message', (data) => {
             const session = sessionManager.getSession(sessionId);
@@ -114,7 +107,6 @@ wss.on('connection', (ws, req) => {
         });
 
         ws.on('close', () => {
-            console.log('Browser disconnected');
             sessionManager.removeBrowser(sessionId, ws);
         })
     }

@@ -1,9 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["DATABASE_URL"], 
-  "build": {
-
-  },
+  "globalEnv": ["DATABASE_URL", "PORT", "SHELTR_SERVER_URL", "NODE_ENV"],
   "tasks": {
     "dev": {
       "persistent": true,
@@ -11,7 +8,13 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", ".next/**"]
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
     }
   }
 }
