@@ -5,7 +5,8 @@ type Props = {
 }
 
 const getReplay = async (replayId: string) => {
-    const res = await fetch(`http://localhost:3001/replay/${replayId}`, {
+    const SERVER_URL = process.env.SERVER_URL ?? 'http://localhost:3000'
+    const res = await fetch(`${SERVER_URL}/replay/${replayId}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'

@@ -38,10 +38,17 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
             term.options.disableStdin = true;
         }
 
-        const ws = new WebSocket(`ws://localhost:3001?role=${role}&sessionId=${sessionId}`);
+        const SERVER_URL = process.env.SERVER_URL ?? 'http://localhost:3000';
+        const ws = new WebSocket(`${SERVER_URL}?role=${role}&sessionId=${sessionId}`);
+
+        console.log(ws);
 
         wsRef.current = ws
         ws.binaryType = 'arraybuffer'
+
+        ws.onopen = () => {
+            console.log('Connected');
+        }
 
         ws.onmessage = (event) => {
             const raw = event.data instanceof ArrayBuffer
