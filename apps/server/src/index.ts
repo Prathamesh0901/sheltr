@@ -60,7 +60,7 @@ wss.on('connection', (ws, req) => {
                 }
             });
 
-            session.browserSockets.forEach(((browserRole, browserWs) => {
+            session.browserSockets.forEach(((browserData, browserWs) => {
                 const replayUrl = `http://localhost:3000/r/${res.id}`;
                 browserWs.send(JSON.stringify({ type: 'disconnected', replayUrl }));
                 browserWs.close()
@@ -74,7 +74,8 @@ wss.on('connection', (ws, req) => {
         const sessionId = new URL(req.url!, 'http://localhost').searchParams.get('sessionId') as UUID;
         if (!sessionId) return;
 
-        sessionManager.addBrowser(sessionId, role, ws);
+        const browserId = crypto.randomUUID();
+        sessionManager.addBrowser(sessionId, role, ws, browserId);
 
         const message: ServerToBrowserMessage = { type: 'role', role };
         ws.send(JSON.stringify(message));
@@ -85,11 +86,22 @@ wss.on('connection', (ws, req) => {
             ws.send(JSON.stringify(message));
         }
 
+        const participants: { role: Role, id: UUID }[] = [];
+
+        session?.browserSockets.forEach((browserData, browserWs) => {
+            participants.push(browserData);
+        });
+
+        const participantsData: ServerToBrowserMessage = { type: 'participants', data: participants };
+        session?.browserSockets.forEach((browserData, browserWs) => {
+            browserWs.send(JSON.stringify(participantsData));
+        });
+
         ws.on('message', (data) => {
             const session = sessionManager.getSession(sessionId);
             if (!session) return;
 
-            const role = session.browserSockets.get(ws);
+            const role = session.browserSockets.get(ws)?.role;
 
             if(!role || role === 'viewer') return;
 
@@ -108,6 +120,16 @@ wss.on('connection', (ws, req) => {
 
         ws.on('close', () => {
             sessionManager.removeBrowser(sessionId, ws);
+            const participants: { role: Role, id: UUID }[] = [];
+
+            session?.browserSockets.forEach((browserData, browserWs) => {
+                participants.push(browserData);
+            });
+
+            const participantsData: ServerToBrowserMessage = { type: 'participants', data: participants };
+            session?.browserSockets.forEach((browserData, browserWs) => {
+                browserWs.send(JSON.stringify(participantsData));
+            });
         })
     }
 })

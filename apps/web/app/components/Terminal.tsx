@@ -1,10 +1,12 @@
 'use client'
 
+import { useParticipantStore } from "@/store/participant";
 import { AgentMessage, BrowserMessage, Role, ServerToBrowserMessage } from "@sheltr/shared";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { UUID } from "node:crypto";
+import { useEffect, useRef, useState } from "react";
 
 export default function TerminalComponent({ sessionId, role }: { sessionId: string, role: Role }) {
     const router = useRouter();
@@ -38,7 +40,7 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
             term.options.disableStdin = true;
         }
 
-        const SERVER_URL = process.env.SERVER_URL ?? 'http://localhost:3000';
+        const SERVER_URL = process.env.SHELTR_SERVER_URL ?? 'ws://localhost:3001';
         const ws = new WebSocket(`${SERVER_URL}?role=${role}&sessionId=${sessionId}`);
 
         console.log(ws);
@@ -64,6 +66,9 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
             else if(message.type === 'disconnected') {
                 disconnectedRef.current = true;
                 router.push(message.replayUrl);
+            }
+            else if(message.type === 'participants') {
+                useParticipantStore.getState().updateStore(message.data);
             }
         }
 

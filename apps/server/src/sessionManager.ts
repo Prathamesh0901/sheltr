@@ -5,7 +5,7 @@ import { RawData, WebSocket } from 'ws';
 class Session {
     id: UUID; 
     agentSocket: WebSocket | null = null;
-    browserSockets: Map<WebSocket, Role> = new Map<WebSocket, Role>();
+    browserSockets: Map<WebSocket, { role: Role, id: UUID }> = new Map();
     buffer: string = "";
     recording: { t: number, data: string }[] = [];
     startTime: number = Date.now();
@@ -52,7 +52,7 @@ class SessionManager {
         return session;
     }
 
-    addBrowser(id: UUID, role: Role, browserSocket: WebSocket): boolean {
+    addBrowser(id: UUID, role: Role, browserSocket: WebSocket, browserId: UUID): boolean {
         const session = this.getSession(id);
         if (session) {
             if(session.browserSockets.size === 0) {
@@ -62,7 +62,7 @@ class SessionManager {
                     this.sessionTimer.delete(session.id);
                 }
             }
-            session.browserSockets.set(browserSocket, role);
+            session.browserSockets.set(browserSocket, {role, id: browserId});
             return true;
         }
         return false;
