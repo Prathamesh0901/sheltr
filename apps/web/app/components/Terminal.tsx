@@ -75,6 +75,7 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
         ws.onclose = () => {
             if(disconnectedRef.current || errorRef.current) return
             term.write('\r\nConnection lost. Session may have ended.\r\n')
+            useParticipantStore.getState().emptyStore()
         }
 
         ws.onerror = () => {

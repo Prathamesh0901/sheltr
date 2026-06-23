@@ -1,5 +1,4 @@
 import { Participant } from '@/types/type';
-import { UUID } from 'node:crypto';
 import { create } from 'zustand';
 
 interface ParticipantState {
@@ -7,18 +6,16 @@ interface ParticipantState {
     updateStore: (participants: Participant[]) => void;
     emptyStore: () => void;
     addParticipant: (participant: Participant) => void;
-    removeParticipant: (id: UUID) => void;
+    removeParticipant: (id: string) => void;
 };
 
 export const useParticipantStore = create<ParticipantState>((set) => ({
     participants: [],
     updateStore: (p: Participant[]) => set(() => ({participants: p})),
     emptyStore: () => set(() => ({participants: []})),
-    addParticipant: (p) => set((state) => {
-        const participants = state.participants;
-        participants.push(p);
-        return {participants}
-    }),
+    addParticipant: (p) => set((state) => ({
+        participants: [...state.participants, p]
+    })),
     removeParticipant: (id) => set((state) => {
         const filteredParticipants = state.participants.filter(p => p.id !== id);
         return {participants: filteredParticipants};

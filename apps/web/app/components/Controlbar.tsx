@@ -46,6 +46,7 @@ export default function Controlbar() {
                     {
                         speeds.map((speed, index) => (
                             <button
+                                key={index}
                                 className={`px-2 py-1 border rounded-md transition-colors ${
                                     activeSpeed === speed
                                     ? 'border-[#7c6af7] bg-[#131025] text-[#a89cf8]'
