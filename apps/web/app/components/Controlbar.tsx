@@ -1,10 +1,16 @@
 'use client'
 
-import { useState } from "react"
+import { PlaybackState } from "@/types/type";
+import { parseTime } from "@/utils/util";
 
-export default function Controlbar() {
-    const [isPlaying, setIsPlaying] = useState<boolean>(true);
-    const [activeSpeed, setActiveSpeed] = useState<number>(1);
+type Props = {
+    playback: PlaybackState;
+    handlePlayPause: (play: boolean) => void;
+    handleSpeedChange: (speed: number) => void;
+    handleRestart: () => void;
+}
+
+export default function Controlbar({ playback, handlePlayPause, handleSpeedChange, handleRestart}: Props) {
 
     const speeds = [0.5, 1, 2];
 
@@ -16,29 +22,38 @@ export default function Controlbar() {
                     accentColor: "#7C6AF7",
                     WebkitAppearance: "none",
                     MozAppearance: "none",
-                    background: "linear-gradient(to right, #7C6AF7 40%, #2A2A30 40%)",
+                    background: `linear-gradient(to right, #7C6AF7 ${playback.progress}%, #2A2A30 ${playback.progress}%)`,
                 }}
+                value={playback.progress}
+                min={0}
+                max={100}
                 type="range"
+                onChange={() => {}}
+                readOnly
             />
             <div className="w-full text-white flex justify-between rounded-xl overflow-hidden">
                 <div className="w-60 p-2 flex justify-between items-center text-[#d9d9ff]">
-                    <button className="w-4 h-4 cursor-pointer transition-transform duration-300 hover:scale-110">
+                    <button className="w-4 h-4 cursor-pointer transition-transform duration-300 hover:scale-110"
+                        onClick={handleRestart}
+                    >
                         <SkipBackward />
                     </button>
-                    <button className="w-4 h-4 cursor-pointer transition-transform duration-300 hover:scale-110" onClick={() => setIsPlaying(!isPlaying)}>
+                    <button className="w-4 h-4 cursor-pointer transition-transform duration-300 hover:scale-110" onClick={() => handlePlayPause(!playback.isPlaying)}>
                         {
-                            isPlaying ?
+                            playback.isPlaying ?
                                 <PauseIcon /> :
                                 <PlayIcon />
                         }
                     </button>
-                    <button className="w-4 h-4 cursor-pointer transition-transform duration-300 hover:scale-110">
+                    <button className="w-4 h-4 cursor-pointer transition-transform duration-300 hover:scale-110"
+                        onClick={handleRestart}
+                    >
                         <SkipForward />
                     </button>
                     <p className="text-sm text-[#6B6B78]">
-                        <span>1:42 </span>
+                        <span>{parseTime(playback.elapsed)} </span>
                         /
-                        <span> 4:02</span>
+                        <span> {parseTime(playback.duration)}</span>
                     </p>
                 </div>
 
@@ -48,11 +63,11 @@ export default function Controlbar() {
                             <button
                                 key={index}
                                 className={`px-2 py-1 border rounded-md transition-colors ${
-                                    activeSpeed === speed
+                                    speed === playback.speed
                                     ? 'border-[#7c6af7] bg-[#131025] text-[#a89cf8]'
                                     : 'border-[#3f3b6b] bg-[#1f1d2c] text-white hover:bg-[#2b2750]'
                                 }`}
-                                onClick={() => setActiveSpeed(speed)}
+                                onClick={() => handleSpeedChange(speed)}
                             >
                                 {speed}x
                             </button>

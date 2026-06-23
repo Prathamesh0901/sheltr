@@ -1,5 +1,6 @@
 import Controlbar from "@/app/components/Controlbar"
 import Navbar from "@/app/components/Navbar"
+import ReplayPlayer from "@/app/components/ReplayPlayer"
 import ReplayTerminalComponent from "@/app/components/ReplayTerminal"
 import { UUID } from "node:crypto"
 
@@ -8,7 +9,7 @@ type Props = {
 }
 
 const getReplay = async (replayId: string) => {
-    const SERVER_URL = process.env.SERVER_URL ?? 'http://localhost:3001'
+    const SERVER_URL = process.env.NEXT_PUBLIC_SHELTR_SERVER_URL ?? 'http://localhost:3001'
     const res = await fetch(`${SERVER_URL}/replay/${replayId}`, {
         method: 'GET',
         headers: {
@@ -47,15 +48,13 @@ export default async function Home({ params }: Props) {
 
     const events = replay.events ?? [];
     const sessionId: UUID = replay.sessionId;
+    const duration = replay.duration ?? 0;
 
     return (
         <>
             <main className="min-w-screen h-screen flex flex-col bg-[#0c0c0e] text-[#e8e8ec] font-sans antialiased overflow-hidden">
-                <Navbar sessionId={sessionId} replayId={replayId} type='replay'/>
-                <div className='w-full h-full flex flex-col overflow-hidden py-2 px-4'>
-                    <ReplayTerminalComponent events={events} />
-                </div>
-                <Controlbar />
+                <Navbar sessionId={sessionId} replayId={replayId} type='replay' duration={duration}/>
+                <ReplayPlayer events={events} duration={duration}/>
             </main>
         </>
     )

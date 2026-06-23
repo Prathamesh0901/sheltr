@@ -1,3 +1,4 @@
+import { parseTime } from "@/utils/util";
 import { Role } from "@sheltr/shared";
 import { UUID } from "node:crypto"
 
@@ -6,9 +7,10 @@ type params = {
     sessionId: UUID;
     replayId?: string;
     role?: Role;
+    duration?: number;
 }
 
-export default function Navbar({ type, sessionId, replayId, role }: params) {
+export default function Navbar({ type, sessionId, replayId, role, duration }: params) {
     return (
         <nav className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-white/[0.06] sticky top-0 bg-[#0c0c0e]/90 backdrop-blur-md z-50">
             <div className="flex gap-10">
@@ -27,8 +29,13 @@ export default function Navbar({ type, sessionId, replayId, role }: params) {
                     type === 'session'?
                         <div className="w-4 h-4 bg-[#3DD68C] rounded-full animate-pulse"></div>
                     :
-                        <div className="text-sm text-[#6B6B78]">
-                            4m 02s
+                        duration && <div className="text-sm text-[#6B6B78]">
+                            {
+                                parseTime(duration).split(':')[0]
+                            }m
+                            {
+                                parseTime(duration).split(':')[1]
+                            }s
                         </div>
                 }
             </div>

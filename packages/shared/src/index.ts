@@ -1,5 +1,3 @@
-import { UUID } from "node:crypto";
-
 // Messages from Agent to Server
 export type AgentMessage = 
     | { type: 'output'; data: string; }
@@ -18,7 +16,7 @@ export type ServerToBrowserMessage =
     | { type: 'buffer'; data: string; }
     | { type: 'role', role: Role }
     | { type: 'error', message: string }
-    | { type: 'participants', data: { role: Role, id: UUID }[] }
+    | { type: 'participants', data: { role: Role, id: string }[] }
     | { type: 'connected'; }
     | { type: 'disconnected'; replayUrl: string}
     

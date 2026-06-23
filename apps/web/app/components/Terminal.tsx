@@ -40,8 +40,8 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
             term.options.disableStdin = true;
         }
 
-        const SERVER_URL = process.env.SHELTR_SERVER_URL ?? 'ws://localhost:3001';
-        const ws = new WebSocket(`${SERVER_URL}?role=${role}&sessionId=${sessionId}`);
+        const WS_URL = process.env.NEXT_PUBLIC_SHELTR_WS_URL ?? 'ws://localhost:3001';
+        const ws = new WebSocket(`${WS_URL}?role=${role}&sessionId=${sessionId}`);
 
         console.log(ws);
 

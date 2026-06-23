@@ -2,24 +2,21 @@
 
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
-type EventType = {
-    t: number,
-    data: string
-}
-
-export default function ReplayTerminalComponent({ events }: {
-    events: EventType[]
-}) {
-    const terminalRef = useRef<HTMLDivElement>(null)
+const ReplayTerminalComponent = forwardRef((props, ref) => {
     const termRef = useRef<Terminal | null>(null)
+    const terminalDivRef = useRef<HTMLDivElement | null>(null)
 
-    
+    useImperativeHandle(ref, () => ({
+        write: (data: string) => {
+            termRef.current?.write(data)
+        },
+        clear: () => termRef.current?.clear()
+    }))
+
     useEffect(() => {
         if (termRef.current) return
-        
-        let timeouts: NodeJS.Timeout[] = [];
 
         const term = new Terminal({
             cursorBlink: true,
@@ -34,21 +31,10 @@ export default function ReplayTerminalComponent({ events }: {
 
         const fitAddon = new FitAddon()
         term.loadAddon(fitAddon)
-        term.open(terminalRef.current!)
+        term.open(terminalDivRef.current!)
         fitAddon.fit()
 
-        events.forEach(event => {
-            const timeout = setTimeout(() => {
-                term.write(event.data);
-            }, event.t);
-
-            timeouts.push(timeout);
-        })
-
         return () => {
-            timeouts.forEach(timeout => {
-                clearTimeout(timeout);
-            })
             term.dispose()
             termRef.current = null
         }
@@ -56,9 +42,10 @@ export default function ReplayTerminalComponent({ events }: {
 
     return (
         <div
-            ref={terminalRef}
+            ref={terminalDivRef}
             className="w-full h-full"
         />
     )
+})
 
-}
+export default ReplayTerminalComponent;
