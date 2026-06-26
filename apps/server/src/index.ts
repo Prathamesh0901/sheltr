@@ -21,8 +21,8 @@ wss.on('connection', (ws, req) => {
     if (role === 'agent') {
         const sessionId = sessionManager.createSession(ws);
 
-        const controllerUrl = `http://localhost:3000/s/${sessionId}?role=controller`;
-        const viewerUrl = `http://localhost:3000/s/${sessionId}?role=viewer`;
+        const controllerUrl = `${process.env.SHELTR_WEB_URL ?? 'http://localhost:3000'}/s/${sessionId}?role=controller`;
+        const viewerUrl = `${process.env.SHELTR_WEB_URL ?? 'http://localhost:3000'}/s/${sessionId}?role=viewer`;
 
         const message: ServerToAgentMessage = { type: 'urls', data: { controllerUrl, viewerUrl } };
 
