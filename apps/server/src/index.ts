@@ -61,7 +61,7 @@ wss.on('connection', (ws, req) => {
             });
 
             session.browserSockets.forEach(((browserData, browserWs) => {
-                const replayUrl = `http://localhost:3000/r/${res.id}`;
+                const replayUrl = `${process.env.SHELTR_WEB_URL}/r/${res.id}`;
                 browserWs.send(JSON.stringify({ type: 'disconnected', replayUrl }));
                 browserWs.close()
             }));
