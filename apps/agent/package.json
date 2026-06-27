@@ -1,6 +1,6 @@
 {
   "name": "@sheltr_/agent",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "dist/index.js",
   "bin": {
@@ -22,5 +22,10 @@
     "tsup": "^8.5.1",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
 }
