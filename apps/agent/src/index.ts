@@ -17,7 +17,9 @@ const ptyProcess = pty.spawn(shell, [], {
 
 console.log(`Spawned ${shell} shell`);
 
-const SERVER_URL = 'https://sheltr-server.up.railway.app';
+// const SERVER_URL = 'https://sheltr-server.up.railway.app';
+const SERVER_URL = 'ws://localhost:3001';
+
 
 let currentWs: WebSocket | null = null;
 

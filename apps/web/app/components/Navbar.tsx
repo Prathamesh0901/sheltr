@@ -3,8 +3,8 @@ import { Role } from "@sheltr/shared";
 import { UUID } from "node:crypto"
 
 type params = {
-    type: 'session' | 'replay'
-    sessionId: UUID;
+    type: 'session' | 'replay' | 'normal';
+    sessionId?: UUID;
     replayId?: string;
     role?: Role;
     duration?: number;
@@ -17,12 +17,17 @@ export default function Navbar({ type, sessionId, replayId, role, duration }: pa
                 <span className="font-mono text-[1.05rem] tracking-tight">
                     sh<span className="text-[#7c6af7]">&gt;</span>ltr
                 </span>
-                <span className="border-l border-white/20 pl-4">
-                    {type} / {sessionId.split('-')[0]}
-                </span>
-                <div className="w-fit px-2 border-2 rounded-full border-[#7c6af7] bg-[#131025]">
-                    {type === 'session'? role: replayId}
-                </div>
+                {
+                    type !== 'normal'?
+                    <>
+                        <span className="border-l border-white/20 pl-4">
+                            {type} / {sessionId?.split('-')[0]}
+                        </span>
+                        <div className="w-fit px-2 border-2 rounded-full border-[#7c6af7] bg-[#131025]">
+                            {type === 'session'? role: replayId}
+                        </div>
+                    </>: <></>
+                }
             </div>
             <div>
                 {
