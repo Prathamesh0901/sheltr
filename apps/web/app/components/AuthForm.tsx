@@ -1,6 +1,7 @@
 'use client';
 
 import { signIn, signUp } from "@/lib/auth-client";
+import { useToastStore } from "@/store/toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -17,6 +18,8 @@ type UserData = {
 export default function AuthForm({ type }: AuthFormProps) {
 
     const router = useRouter();
+
+    const { showToast } = useToastStore();
 
     const [userData, setUserData] = useState<UserData>({
         email: '',
@@ -40,8 +43,14 @@ export default function AuthForm({ type }: AuthFormProps) {
                 password: userData.password
             })
             console.log(error);
-            if(!error) router.push('/dashboard');
-            else if(error.message) setError(error.message);
+            if(!error) {
+                router.push('/dashboard');
+                showToast('success', 'User signed in');
+            }
+            else if(error.message) {
+                setError(error.message);
+                showToast('error', 'Error signing in');
+            }
         }
         else if(type === 'signup') {
             const { error } = await signUp.email({ 
@@ -50,8 +59,14 @@ export default function AuthForm({ type }: AuthFormProps) {
                 name: userData.name
             })
             console.log(error);
-            if(!error) router.push('/dashboard');
-            else if(error.message) setError(error.message);
+            if(!error) {
+                router.push('/dashboard');
+                showToast('success', 'User signed up');
+            }
+            else if(error.message) {
+                setError(error.message);
+                showToast('error', 'Error signing up');
+            }
         }
     }
 

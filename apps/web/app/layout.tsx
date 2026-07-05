@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { DM_Sans, DM_Mono, Instrument_Serif } from 'next/font/google'
 import './globals.css'
+import Toast from './components/Toast'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -35,6 +36,7 @@ export default function RootLayout({
     <html lang="en" className={`${dmSans.variable} ${dmMono.variable} ${instrumentSerif.variable}`}>
       <body className="font-sans antialiased">
         {children}
+        <Toast />
       </body>
     </html>
   )
