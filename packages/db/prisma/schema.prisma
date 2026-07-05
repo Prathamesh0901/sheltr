@@ -70,5 +70,6 @@ model Recording {
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   events    Json
   duration  Int
+  viewerCount Int @default(0)
   createdAt DateTime @default(now())
 }

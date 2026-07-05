@@ -57,6 +57,7 @@ wss.on('connection', (ws, req) => {
                     sessionId,
                     duration,
                     events: session.recording,
+                    viewerCount: session.maxViewers
                 }
             });
 
