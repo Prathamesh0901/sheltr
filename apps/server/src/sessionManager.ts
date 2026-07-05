@@ -9,11 +9,13 @@ class Session {
     buffer: string = "";
     recording: { t: number, data: string }[] = [];
     startTime: number = Date.now();
-    
+    maxViewers: number;
+
     constructor (id: UUID, agentWs: WebSocket) {
         this.id = id;
         this.agentSocket = agentWs;
         this.startTime = Date.now();
+        this.maxViewers = 0;
     }      
 };
 
@@ -63,6 +65,9 @@ class SessionManager {
                 }
             }
             session.browserSockets.set(browserSocket, {role, id: browserId});
+            if(session.browserSockets.size > session.maxViewers) {
+                session.maxViewers = session.browserSockets.size;
+            }
             return true;
         }
         return false;
