@@ -22,6 +22,7 @@ model User {
   updatedAt DateTime @updatedAt
   sessions Session[]
   accounts Account[]
+  sheltrSessions SheltrSession[]
   recordings Recording[]
 }
 
@@ -35,6 +36,15 @@ model Session {
   userAgent String?
   userId String
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SheltrSession {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields: [userId], references: [id])
+  startedAt DateTime @default(now())
+  endedAt DateTime?
+  recording Recording?
 }
 
 model Account {
@@ -65,7 +75,8 @@ model Verification {
 
 model Recording {
   id        String   @id @default(cuid())
-  sessionId String
+  sheltrSessionId String @unique
+  sheltrSession SheltrSession @relation(fields: [sheltrSessionId], references: [id])
   userId String?
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   events    Json
