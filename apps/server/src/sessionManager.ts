@@ -1,9 +1,9 @@
 import { AgentMessage, Role } from "@sheltr/shared";
-import { randomUUID, UUID } from "node:crypto";
-import { RawData, WebSocket } from 'ws';
+import { UUID } from "node:crypto";
+import { WebSocket } from 'ws';
 
 class Session {
-    id: UUID; 
+    id: string; 
     agentSocket: WebSocket | null = null;
     browserSockets: Map<WebSocket, { role: Role, id: UUID }> = new Map();
     buffer: string = "";
@@ -11,7 +11,7 @@ class Session {
     startTime: number = Date.now();
     maxViewers: number;
 
-    constructor (id: UUID, agentWs: WebSocket) {
+    constructor (id: string, agentWs: WebSocket) {
         this.id = id;
         this.agentSocket = agentWs;
         this.startTime = Date.now();
@@ -22,7 +22,7 @@ class Session {
 class SessionManager {
     sessions: Session[] = [];
     static instance: SessionManager | null = null;
-    sessionTimer: Map<UUID, NodeJS.Timeout> = new Map<UUID, NodeJS.Timeout>
+    sessionTimer: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>
     
     private constructor () {}
 
@@ -32,29 +32,25 @@ class SessionManager {
         return this.instance;
     }
 
-    createSession(agentWs: WebSocket): UUID {
-        const sessionExists = this.sessions.find(session => session.agentSocket === agentWs);
-        if (sessionExists && sessionExists.id) return sessionExists.id;
-
-        const newSessionId = randomUUID();
-        this.sessions.push(new Session(newSessionId, agentWs));
+    createSession(agentWs: WebSocket, sessionId: string) {
+        this.sessions.push(new Session(sessionId, agentWs));
 
         const timeout = setTimeout(() => {
-            this.destroySession(newSessionId);
-            this.sessionTimer.delete(newSessionId);
+            this.destroySession(sessionId);
+            this.sessionTimer.delete(sessionId);
         }, 600000);
 
-        this.sessionTimer.set(newSessionId, timeout);
+        this.sessionTimer.set(sessionId, timeout);
 
-        return newSessionId;
+        return;
     }
 
-    getSession(id: UUID): Session | undefined {
+    getSession(id: string): Session | undefined {
         const session = this.sessions.find(session => session.id === id);
         return session;
     }
 
-    addBrowser(id: UUID, role: Role, browserSocket: WebSocket, browserId: UUID): boolean {
+    addBrowser(id: string, role: Role, browserSocket: WebSocket, browserId: UUID): boolean {
         const session = this.getSession(id);
         if (session) {
             if(session.browserSockets.size === 0) {
@@ -73,7 +69,7 @@ class SessionManager {
         return false;
     }
 
-    removeBrowser(id: UUID, browserSocket: WebSocket) {
+    removeBrowser(id: string, browserSocket: WebSocket) {
         const session = this.getSession(id);
         if (session) {
             session.browserSockets.delete(browserSocket);
@@ -81,21 +77,21 @@ class SessionManager {
         return;
     }
 
-    appendScrollback(id: UUID, data: AgentMessage) {
+    appendScrollback(id: string, data: AgentMessage) {
         const session = this.getSession(id);
         if (session && data.type === 'output') {
             session.buffer += data.data;
         }
     }
 
-    appendRecording(id: UUID, data: string) {
+    appendRecording(id: string, data: string) {
         const session = this.getSession(id);
         if(!session) return;
 
         session.recording.push({ t: Date.now()-session.startTime, data});
     }
     
-    destroySession(id: UUID) {
+    destroySession(id: string) {
         const timer = this.sessionTimer.get(id)
         if(timer) {
             clearTimeout(timer)

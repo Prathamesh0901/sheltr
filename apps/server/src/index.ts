@@ -15,11 +15,19 @@ const server = http.createServer(app);
 
 const wss = new WebSocketServer({ server });
 
-wss.on('connection', (ws, req) => {
+wss.on('connection', async (ws, req) => {
     const role = new URL(req.url!, 'http://localhost').searchParams.get('role');
 
     if (role === 'agent') {
-        const sessionId = sessionManager.createSession(ws);
+        
+        const dbSession = await prisma.sheltrSession.create({
+            data: {
+                userId: null
+            }
+        })
+
+        const sessionId = dbSession.id;
+        sessionManager.createSession(ws, sessionId);
 
         const controllerUrl = `${process.env.SHELTR_WEB_URL ?? 'http://localhost:3000'}/s/${sessionId}?role=controller`;
         const viewerUrl = `${process.env.SHELTR_WEB_URL ?? 'http://localhost:3000'}/s/${sessionId}?role=viewer`;
@@ -54,12 +62,21 @@ wss.on('connection', (ws, req) => {
 
             const res = await prisma.recording.create({
                 data: {
-                    sessionId,
+                    sheltrSessionId: dbSession.id,
                     duration,
                     events: session.recording,
                     viewerCount: session.maxViewers
                 }
             });
+
+            await prisma.sheltrSession.update({
+                where: {
+                    id: sessionId
+                },
+                data: {
+                    endedAt: new Date()
+                }
+            })
 
             session.browserSockets.forEach(((browserData, browserWs) => {
                 const replayUrl = `${process.env.SHELTR_WEB_URL}/r/${res.id}`;

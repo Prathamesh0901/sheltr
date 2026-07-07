@@ -1,16 +1,17 @@
 import { parseTime } from "@/utils/util";
 import { Role } from "@sheltr/shared";
-import { UUID } from "node:crypto"
+import NavbarActions from "./NavbarActions";
 
 type params = {
-    type: 'session' | 'replay' | 'normal';
-    sessionId?: UUID;
+    type: 'session' | 'replay' | 'dashboard' | 'normal';
+    sessionId?: string;
     replayId?: string;
     role?: Role;
     duration?: number;
 }
 
 export default function Navbar({ type, sessionId, replayId, role, duration }: params) {
+
     return (
         <nav className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-white/[0.06] sticky top-0 bg-[#0c0c0e]/90 backdrop-blur-md z-50">
             <div className="flex gap-10">
@@ -19,6 +20,12 @@ export default function Navbar({ type, sessionId, replayId, role, duration }: pa
                 </span>
                 {
                     type !== 'normal'?
+                    type === 'dashboard'?
+                    <>
+                        <span className="border-l border-white/20 pl-4">
+                            {type}
+                        </span>
+                    </>:
                     <>
                         <span className="border-l border-white/20 pl-4">
                             {type} / {sessionId?.split('-')[0]}
@@ -29,12 +36,12 @@ export default function Navbar({ type, sessionId, replayId, role, duration }: pa
                     </>: <></>
                 }
             </div>
-            <div>
+            <div className="flex gap-2 items-center justify-center">
                 {
                     type === 'session'?
                         <div className="w-4 h-4 bg-[#3DD68C] rounded-full animate-pulse"></div>
                     :
-                        duration && <div className="text-sm text-[#6B6B78]">
+                        type === 'replay' && duration && <div className="text-sm text-[#6B6B78]">
                             {
                                 parseTime(duration).split(':')[0]
                             }m
@@ -43,6 +50,8 @@ export default function Navbar({ type, sessionId, replayId, role, duration }: pa
                             }s
                         </div>
                 }
+
+                <NavbarActions />
             </div>
         </nav>
     )
