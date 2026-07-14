@@ -24,6 +24,7 @@ model User {
   accounts Account[]
   sheltrSessions SheltrSession[]
   recordings Recording[]
+  apiKeys ApiKey[]
 }
 
 model Session {
@@ -83,4 +84,13 @@ model Recording {
   duration  Int
   viewerCount Int @default(0)
   createdAt DateTime @default(now())
+}
+
+model ApiKey {
+  id String @id @default(cuid())
+  key String @unique
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  lastUsed DateTime?
 }
