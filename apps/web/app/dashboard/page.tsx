@@ -24,6 +24,14 @@ export default async function Home() {
         }
     })
 
+    const apiKey = await prisma.apiKey.findUnique({
+        where: {
+            userId: session.user.id
+        }
+    })
+
+    const key = apiKey?.key ?? null;
+
     let recordings: Recording[] = [];
     sheltrSessions.forEach(s => s.recording && recordings.push(s.recording))
 
@@ -39,6 +47,7 @@ export default async function Home() {
                     totalReplays={recordings.filter(r => r.events).length}
                     hoursShared={hoursShared}
                     username={session.user.name}
+                    apiKey={key}
                 />
                 <div className="w-full border border-[#2A2A30]" />
                 <div className="flex-1 min-h-0 overflow-hidden">

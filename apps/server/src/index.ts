@@ -19,10 +19,40 @@ wss.on('connection', async (ws, req) => {
     const role = new URL(req.url!, 'http://localhost').searchParams.get('role');
 
     if (role === 'agent') {
-        
+
+        const apiKey = new URL(req.url!, 'http://localhost').searchParams.get('apiKey');
+
+        if(!apiKey) {
+            ws.close(4001, 'API key required');
+            return;
+        }
+
+        const keyRecord = await prisma.apiKey.findUnique({
+            where: {
+                key: apiKey
+            },
+            include: {
+                user: true
+            }
+        })
+  
+        if(!keyRecord) {
+            ws.close(4001, 'Invalid API key')
+            return
+        }
+
+        await prisma.apiKey.update({
+            where: { 
+                key: apiKey
+            },
+            data: {
+                lastUsed: new Date()
+            }
+        })
+
         const dbSession = await prisma.sheltrSession.create({
             data: {
-                userId: null
+                userId: keyRecord.user.id
             }
         })
 

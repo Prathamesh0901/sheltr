@@ -29,8 +29,10 @@ export const connectServer = (attempts: number) => {
         process.exit(1);
     }
 
+    const apiKey = process.env.SHELTR_API_KEY;
+
     // Connect to relay server
-    const ws = new WebSocket(`${SERVER_URL}?role=agent`);
+    const ws = new WebSocket(`${SERVER_URL}?role=agent&apiKey=${apiKey}`);
 
     ws.on('open', () => {
         currentWs = ws;
