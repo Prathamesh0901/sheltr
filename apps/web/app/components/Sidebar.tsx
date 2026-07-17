@@ -1,9 +1,8 @@
 import { useParticipantStore } from "@/store/participant"
-import { useState } from "react";
 
-export default function Sidebar() {
+export default function Sidebar({ handleClick }: { handleClick: () => void }) {
     const { participants } = useParticipantStore();
-    const [isOpen, setIsOpen] = useState<boolean>(false);
+    
     return (
         <>
         <div className="w-68 h-full px-4 py-4 flex flex-col overflow-hidden">
@@ -27,13 +26,10 @@ export default function Sidebar() {
                     ))
                 }
             </div>
-            <button className="mt-4 px-6 py-3 bg-[#090714] rounded-md border border-[#7C6AF7] text-center cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
+            <button className="mt-4 px-6 py-3 bg-[#090714] rounded-md border border-[#7C6AF7] text-center cursor-pointer" onClick={handleClick}>
                 Share Session
             </button>
         </div>
-        {/* <div className={`z-50 absolute ${isOpen?'': 'hidden'}`}>
-            This is dialog
-        </div> */}
         </>
     )
 }
