@@ -3,6 +3,7 @@
 import * as pty from 'node-pty';
 import WebSocket from 'ws';
 import { AgentMessage, ServerToAgentMessage } from '@sheltr/shared';
+import { platform } from 'node:os';
 
 const shell = process.env.SHELL ?? 'bash';
 
@@ -38,13 +39,25 @@ export const connectServer = (attempts: number) => {
         currentWs = ws;
         console.log('Connected to server');
 
-        ws.on('message', (raw) => {
+        ws.on('message', async (raw) => {
             const message = JSON.parse(raw.toString()) as ServerToAgentMessage;
 
             if (message.type === 'urls') {
+                const { controllerUrl, viewerUrl } = message.data
+
                 console.log('\n✓ Session ready\n')
-                console.log(`  Controller → ${message.data.controllerUrl}`)
-                console.log(`  Viewer     → ${message.data.viewerUrl}\n`)
+                console.log(`  Controller → ${controllerUrl}`)
+                console.log(`  Viewer     → ${viewerUrl}\n`)
+
+                const { exec } = await import('node:child_process')
+
+                const cmd = platform() === 'darwin' ?
+                        `open "${controllerUrl}"`:
+                        platform() === 'win32' ?
+                        `start "${controllerUrl}"` :
+                        `xdg-open "${controllerUrl}"`
+                        
+                exec(cmd)
             }
             else if (message.type === 'input') {
                 ptyProcess.write(message.data);
