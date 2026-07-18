@@ -120,8 +120,13 @@ wss.on('connection', async (ws, req) => {
 
     if (role === 'controller' || role === 'viewer') {
         const sessionId = new URL(req.url!, 'http://localhost').searchParams.get('sessionId') as UUID;
-        if (!sessionId) return;
-
+        if (!sessionId) {
+            const msg: ServerToBrowserMessage = { type: 'error', message: 'Session Id is required' }
+            ws.send(JSON.stringify(msg))
+            ws.close()
+            return;
+        }
+        
         const browserId = crypto.randomUUID();
         sessionManager.addBrowser(sessionId, role, ws, browserId);
 
@@ -129,19 +134,27 @@ wss.on('connection', async (ws, req) => {
         ws.send(JSON.stringify(message));
 
         const session = sessionManager.getSession(sessionId);
-        if (session?.buffer) {
+
+        if(!session) {
+            const msg: ServerToBrowserMessage = { type: 'error', message: 'Session not found' }
+            ws.send(JSON.stringify(msg))
+            ws.close()
+            return;
+        }
+
+        if (session.buffer) {
             const message: ServerToBrowserMessage = { type: 'buffer', data: session.buffer };
             ws.send(JSON.stringify(message));
         }
 
         const participants: { role: Role, id: UUID }[] = [];
 
-        session?.browserSockets.forEach((browserData, browserWs) => {
+        session.browserSockets.forEach((browserData, browserWs) => {
             participants.push(browserData);
         });
 
         const participantsData: ServerToBrowserMessage = { type: 'participants', data: participants };
-        session?.browserSockets.forEach((browserData, browserWs) => {
+        session.browserSockets.forEach((browserData, browserWs) => {
             browserWs.send(JSON.stringify(participantsData));
         });
 

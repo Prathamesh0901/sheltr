@@ -70,6 +70,9 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
             else if(message.type === 'participants') {
                 useParticipantStore.getState().updateStore(message.data);
             }
+            else if(message.type === 'error') {
+                router.push(`/session-error?${encodeURIComponent(message.message)}`)
+            }
         }
 
         ws.onclose = () => {
