@@ -2,6 +2,8 @@ import { AgentMessage, Role, RecordingEvent } from "@sheltr/shared";
 import { UUID } from "node:crypto";
 import { WebSocket } from 'ws';
 
+const MAX_BUFFER_SIZE = 1024*1024
+
 class Session {
     id: string; 
     agentSocket: WebSocket | null = null;
@@ -80,7 +82,10 @@ class SessionManager {
     appendScrollback(id: string, data: AgentMessage) {
         const session = this.getSession(id);
         if (session && data.type === 'output') {
-            session.buffer += data.data;
+            if (session.buffer.length >= MAX_BUFFER_SIZE) {
+                session.buffer = session.buffer.slice(session.buffer.length - MAX_BUFFER_SIZE)
+            }
+            session.buffer += data.data
         }
     }
 
