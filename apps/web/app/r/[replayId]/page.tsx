@@ -1,60 +1,58 @@
-import Controlbar from "@/app/components/Controlbar"
 import Navbar from "@/app/components/Navbar"
 import ReplayPlayer from "@/app/components/ReplayPlayer"
-import ReplayTerminalComponent from "@/app/components/ReplayTerminal"
+import Link from "next/link"
 import { UUID } from "node:crypto"
+import { prisma } from "@sheltr/db"
+import { RecordingEvent } from "@sheltr/shared"
 
 type Props = {
-    params: Promise<{ replayId: string}>
-}
-
-const getReplay = async (replayId: string) => {
-    const SERVER_URL = process.env.NEXT_PUBLIC_SHELTR_SERVER_URL ?? 'http://localhost:3001'
-    const res = await fetch(`${SERVER_URL}/replay/${replayId}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-
-    if(res.status != 200) {
-        return null;
-    }
-
-    const data = await res.json();
-    return data.replay;
+    params: Promise<{ replayId: string }>
 }
 
 export default async function Home({ params }: Props) {
     const { replayId } = await params;
 
-    if (!replayId) {
-        return (
-            <div>
-                Replay Id is required
-            </div>
-        )
-    }
+    const replay = await prisma.recording.findUnique({
+        where: {
+            id: replayId
+        },
+        include: {
+            sheltrSession: true
+        }
+    })
     
-    const replay = await getReplay(replayId);
-
-    if(!replay) {
+    if (!replay) {
         return (
-            <div>
-                Invalid replay Id
-            </div>
+            <main className="min-h-screen bg-[#0c0c0e] text-[#e8e8ec] font-sans antialiased flex flex-col">
+                <Navbar type="normal" />
+                <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center px-6">
+                    <span className="font-mono text-xs text-[#3dd68c] uppercase tracking-widest">replay</span>
+                    <h1 className="text-5xl font-light tracking-tight">
+                        Replay not <span className="italic font-serif text-[#a89cf8]">found.</span>
+                    </h1>
+                    <p className="text-[#6b6b78] max-w-sm">
+                        This replay doesn't exist or may have been deleted.
+                    </p>
+                    <Link
+                        href="/dashboard"
+                        className="mt-2 px-6 py-2.5 bg-[#7c6af7] text-white rounded-lg text-sm font-medium hover:bg-[#6a59e0] transition-colors"
+                    >
+                        back to dashboard
+                    </Link>
+                </div>
+            </main>
         )
     }
 
-    const events = replay.events ?? [];
-    const sessionId: UUID = replay.sessionId;
+    const events = replay.events as RecordingEvent[]
+    const sessionId: UUID = replay.sheltrSessionId as UUID;
     const duration = replay.duration ?? 0;
 
     return (
         <>
             <main className="min-w-screen h-screen flex flex-col bg-[#0c0c0e] text-[#e8e8ec] font-sans antialiased overflow-hidden">
-                <Navbar sessionId={sessionId} replayId={replayId} type='replay' duration={duration}/>
-                <ReplayPlayer events={events} duration={duration}/>
+                <Navbar sessionId={sessionId} replayId={replayId} type='replay' duration={duration} />
+                <ReplayPlayer events={events} duration={duration} />
             </main>
         </>
     )

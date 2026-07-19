@@ -1,4 +1,4 @@
-import { AgentMessage, Role } from "@sheltr/shared";
+import { AgentMessage, Role, RecordingEvent } from "@sheltr/shared";
 import { UUID } from "node:crypto";
 import { WebSocket } from 'ws';
 
@@ -7,7 +7,7 @@ class Session {
     agentSocket: WebSocket | null = null;
     browserSockets: Map<WebSocket, { role: Role, id: UUID }> = new Map();
     buffer: string = "";
-    recording: { t: number, data: string }[] = [];
+    recording: RecordingEvent[] = [];
     startTime: number = Date.now();
     maxViewers: number;
 

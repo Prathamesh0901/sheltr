@@ -28,3 +28,6 @@ export type ServerToAgentMessage =
 
 // User Role
 export type Role = 'controller' | 'viewer'
+
+// Recording Event
+export type RecordingEvent = {t: number, data: string}
