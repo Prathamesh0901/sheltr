@@ -9,11 +9,7 @@ import { prisma } from '@sheltr/db';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 
-const app = express();
-
-const server = http.createServer(app);
-
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ port: PORT });
 
 wss.on('connection', async (ws, req) => {
     const role = new URL(req.url!, 'http://localhost').searchParams.get('role');
@@ -118,7 +114,88 @@ wss.on('connection', async (ws, req) => {
         });
     }
 
-    if (role === 'controller' || role === 'viewer') {
+    if(role === 'controller') {
+        const sessionId = new URL(req.url!, 'http://localhost').searchParams.get('sessionId')
+        if(!sessionId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Session ID required' }))
+            ws.close()
+            return
+        }
+
+        const session = sessionManager.getSession(sessionId)
+        if(!session) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Session not found' }))
+            ws.close()
+            return
+        }
+
+        const authTimeout = setTimeout(() => {
+            ws.close(4001, 'Auth timeout')
+        }, 5000)
+
+        ws.once('message', async (data) => {
+            const message = JSON.parse(data.toString()) as BrowserMessage
+
+            if (message.type !== 'auth') {
+                clearTimeout(authTimeout)
+                ws.close(4001, 'Expected auth message')
+                return
+            }
+
+            const authSession = await prisma.session.findUnique({
+                where: { token: message.token }
+            })
+
+            if (!authSession || authSession.expiresAt < new Date()) {
+                clearTimeout(authTimeout)
+                ws.close(4001, 'Invalid or expired session')
+                return
+            }
+
+            clearTimeout(authTimeout)
+
+            const browserId = crypto.randomUUID()
+            sessionManager.addBrowser(sessionId, role, ws, browserId)
+
+            ws.send(JSON.stringify({ type: 'role', role }))
+
+            if(session.buffer) {
+                ws.send(JSON.stringify({ type: 'buffer', data: session.buffer }))
+            }
+
+            const participants: { role: Role, id: string }[] = []
+            session.browserSockets.forEach((browserData) => participants.push(browserData))
+            const participantsMsg: ServerToBrowserMessage = { type: 'participants', data: participants }
+            session.browserSockets.forEach((_, browserWs) => browserWs.send(JSON.stringify(participantsMsg)))
+
+            ws.on('message', (data) => {
+                const session = sessionManager.getSession(sessionId)
+                if (!session) return
+
+                const browserMessage = JSON.parse(data.toString()) as BrowserMessage
+
+                if(session.agentSocket?.readyState === WebSocket.OPEN) {
+                    if(browserMessage.type === 'input') {
+                        session.agentSocket.send(JSON.stringify({ type: 'input', data: browserMessage.data }))
+                    } 
+                    else if(browserMessage.type === 'resize') {
+                        session.agentSocket.send(JSON.stringify({ type: 'resize', rows: browserMessage.rows, cols: browserMessage.cols }))
+                    }
+                }
+            })
+
+            ws.on('close', () => {
+                sessionManager.removeBrowser(sessionId, ws)
+                const participants: { role: Role, id: string }[] = []
+                session?.browserSockets.forEach((browserData) => participants.push(browserData))
+                session?.browserSockets.forEach((_, browserWs) => {
+                    browserWs.send(JSON.stringify({ type: 'participants', data: participants }))
+                })
+            })
+        })
+    }
+
+    if(role === 'viewer') {
         const sessionId = new URL(req.url!, 'http://localhost').searchParams.get('sessionId') as UUID;
         if (!sessionId) {
             const msg: ServerToBrowserMessage = { type: 'error', message: 'Session Id is required' }

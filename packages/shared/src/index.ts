@@ -8,6 +8,7 @@ export type AgentMessage =
 export type BrowserMessage = 
     | { type: 'input'; data: string; }
     | { type: 'resize'; rows: number; cols: number; }
+    | { type: 'auth'; token: string; }
     
 // Messages from Server to Browser
 export type ServerToBrowserMessage = 

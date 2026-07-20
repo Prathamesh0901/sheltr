@@ -1,12 +1,13 @@
 'use client'
 
+import { authClient, useSession } from "@/lib/auth-client";
 import { useParticipantStore } from "@/store/participant";
-import { AgentMessage, BrowserMessage, Role, ServerToBrowserMessage } from "@sheltr/shared";
+import { useToastStore } from "@/store/toast";
+import { BrowserMessage, Role, ServerToBrowserMessage } from "@sheltr/shared";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { useRouter } from "next/navigation";
-import { UUID } from "node:crypto";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export default function TerminalComponent({ sessionId, role }: { sessionId: string, role: Role }) {
     const router = useRouter();
@@ -16,6 +17,8 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
     const termRef = useRef<Terminal | null>(null)
     const disconnectedRef = useRef<boolean>(false)
     const errorRef = useRef<boolean>(false)
+
+    const { showToast } = useToastStore()
     
     useEffect(() => {
         if (wsRef.current || termRef.current) return
@@ -48,8 +51,14 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
         wsRef.current = ws
         ws.binaryType = 'arraybuffer'
 
-        ws.onopen = () => {
+        ws.onopen = async () => {
             console.log('Connected');
+            if(role === 'controller') {
+                const session = await authClient.getSession();
+                const token = session.data?.session.token ?? ''
+                const msg: BrowserMessage = { type: 'auth', token }
+                ws.send(JSON.stringify(msg))
+            }
         }
 
         ws.onmessage = (event) => {
@@ -75,7 +84,12 @@ export default function TerminalComponent({ sessionId, role }: { sessionId: stri
             }
         }
 
-        ws.onclose = () => {
+        ws.onclose = (event) => {
+            if(event.code === 4001) {
+                router.push('/auth/signin')
+                showToast('error', 'User not authenticated')
+                return
+            }
             if(disconnectedRef.current || errorRef.current) return
             term.write('\r\nConnection lost. Session may have ended.\r\n')
             useParticipantStore.getState().emptyStore()

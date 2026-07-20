@@ -7,13 +7,12 @@ export default async function proxy(request: NextRequest) {
     const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
     const isProtected = 
         request.nextUrl.pathname.startsWith('/dashboard') ||
-        request.nextUrl.pathname.startsWith('/s') ||
-        request.nextUrl.pathname.startsWith('/r')
+        request.nextUrl.pathname.startsWith('/s') && request.nextUrl.searchParams.get('role') === 'controller'
 
     if(!session && isAuthPage) {
         return NextResponse.next();
     }
-    
+
     if(!session && isProtected) {
         return NextResponse.redirect(new URL('/auth/signin', request.url))
     }
