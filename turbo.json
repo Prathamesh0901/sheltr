@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["DATABASE_URL", "PORT", "SHELTR_SERVER_URL", "NODE_ENV"],
+  "globalEnv": ["DATABASE_URL", "PORT", "SHELTR_SERVER_URL", "NODE_ENV", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL"],
   "tasks": {
     "dev": {
       "persistent": true,
