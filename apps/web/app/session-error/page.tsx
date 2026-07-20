@@ -3,8 +3,9 @@
 import { useSearchParams } from 'next/navigation'
 import Navbar from '../components/Navbar'
 import Link from 'next/link'
+import { Suspense } from 'react'
 
-export default function SessionError() {
+function SessionError() {
     const searchParams = useSearchParams()
     const message = searchParams.get('message') ?? 'Session not found or has ended'
 
@@ -25,5 +26,16 @@ export default function SessionError() {
                 </Link>
             </div>
         </main>
+    )
+}
+
+export default function Home() {
+    return (
+        <>
+            <div>Loading...</div>
+            <Suspense>
+                <SessionError />
+            </Suspense>
+        </>
     )
 }
