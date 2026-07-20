@@ -18,7 +18,7 @@ const ptyProcess = pty.spawn(shell, [], {
 
 console.log(`Spawned ${shell} shell`);
 
-const SERVER_URL = 'wss://sheltr_wss.onrender.com';
+const SERVER_URL = 'wss://sheltr-wss.onrender.com';
 // const SERVER_URL = 'ws://localhost:3001';
 
 
